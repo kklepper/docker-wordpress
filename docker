@@ -126,7 +126,10 @@ curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "PHP API"
 echo "Environment Created!"
 echo "--------------------"
 echo
-echo "Browse to http://$HAPROXY_WEB_IP or to your public IP to access your wordpress site"
+echo "Browse to http://$HAPROXY_WEB_IP"
+echo "--- or to your public IP to access your wordpress site"
+echo "--- may look bad due to incorrect link to wordpress css file: "
+echo "--- http://wordpress/wp-content/themes/twentythirteen/style.css?ver=2013-07-18"
 echo
 echo Variables available fo you :-
 echo
