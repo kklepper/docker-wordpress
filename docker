@@ -107,7 +107,7 @@ HAPROXY_WEB=$(docker run -d paulczar/haproxy-web /haproxy/start "$WORDPRESS1_IP:
 HAPROXY_WEB_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}' $HAPROXY_WEB)
 # new docker syntax
 
-echo "* Check it works $HAPROXY_WEB_IP"
+echo "* Check it works"
 
 curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "PHP API"
 
