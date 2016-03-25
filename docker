@@ -114,7 +114,7 @@ echo "Create Web Load Balancer"
 echo "--------------------------"
 
 echo "* Create HAProxy-Web"
-HAPROXY_WEB=$(docker run -d paulczar/haproxy-web /haproxy/start "$WORDPRESS1_IP:80,$WORDPRESS2_IP:80")
+HAPROXY_WEB=$(docker run -p 80:80 -d paulczar/haproxy-web /haproxy/start "$WORDPRESS1_IP:80,$WORDPRESS2_IP:80")
 HAPROXY_WEB_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}' $HAPROXY_WEB)
 # new docker syntax
 
