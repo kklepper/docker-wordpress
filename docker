@@ -8,31 +8,19 @@ echo "* Create MySQL01"
 
 MYSQL01=$(docker run -d --name m1 paulczar/mysql mysqld_safe --server-id=1 --log-bin=mysql-bin --log-slave-updates=1  --auto_increment_increment=2 --auto_increment_offset=1)
 MYSQL01_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}' $MYSQL01)
-#MYSQL01_IP=$(docker inspect $MYSQL01 | grep IPAd | awk -F'"' '{print $4}'|awk '{print $2}')
 
 echo "* Create MySQL02"
 
 MYSQL02=$(docker run -d --name m2 paulczar/mysql mysqld_safe --server-id=2 --log-bin=mysql-bin --log-slave-updates=1 --auto_increment_increment=2 --auto_increment_offset=2)
 MYSQL02_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}' $MYSQL02)
-#MYSQL02_IP=$(docker inspect $MYSQL02 | grep IPAd | awk -F'"' '{print $4}'|awk '{print $2}')
-
-
-
-
-
-
 
 echo "* Sleep for two seconds for servers to come online..."
 sleep 2
 
 echo "* Creat replication user"
 
-echo "___________ $MYSQL01_IP"
-
 mysql -uroot -proot -h $MYSQL01_IP -AN -e 'GRANT REPLICATION SLAVE ON *.* TO "replication"@"%" IDENTIFIED BY "password";'
-
 mysql -uroot -proot -h $MYSQL01_IP -AN -e 'flush privileges;'
-
 
 echo "* Export Data from MySQL01 to MySQL02"
 
@@ -84,7 +72,6 @@ mysql -uroot -proot -h $MYSQL01_IP -AN -e "GRANT USAGE ON *.* TO 'haproxy'@'%';"
 
 HAPROXY_MYSQL=$(docker run -d paulczar/haproxy-mysql /haproxy/start "$MYSQL01_IP:3306,$MYSQL02_IP:3306")
 HAPROXY_MYSQL_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}' $HAPROXY_MYSQL)
-#HAPROXY_MYSQL_IP=$(docker inspect $HAPROXY_MYSQL | grep IPAd | awk -F'"' '{print $4}')
 
 echo "* Check our haproxy works"
 echo "   (should show alternating server_id)"
@@ -101,12 +88,10 @@ echo "------------------------"
 echo "* Create WordPress01"
 WORDPRESS1=$(docker run -d paulczar/apache2-wordpress /wordpress/start $HAPROXY_MYSQL_IP)
 WORDPRESS1_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}' $WORDPRESS1)
-#WORDPRESS1_IP=$(docker inspect $WORDPRESS1 | grep IPAd | awk -F'"' '{print $4}')
 
 echo "* Create WordPress02"
 WORDPRESS2=$(docker run -d paulczar/apache2-wordpress /wordpress/start $HAPROXY_MYSQL_IP)
 WORDPRESS2_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}' $WORDPRESS2)
-#WORDPRESS2_IP=$(docker inspect $WORDPRESS2 | grep IPAd | awk -F'"' '{print $4}')
 
 echo 
 echo "Create Web Load Balancer"
@@ -115,10 +100,7 @@ echo "--------------------------"
 echo "* Create HAProxy-Web"
 HAPROXY_WEB=$(docker run -d paulczar/haproxy-web /haproxy/start "$WORDPRESS1_IP:80,$WORDPRESS2_IP:80")
 
-echo "+++++++++++++ $HAPROXY_WEB"
-
 HAPROXY_WEB_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}' $HAPROXY_WEB)
-#HAPROXY_WEB_IP=$(docker inspect $HAPROXY_WEB | grep IPAd | awk -F'"' '{print $4}')
 
 echo "* Check it works $HAPROXY_WEB_IP"
 
