@@ -1,6 +1,17 @@
 #!/bin/bash
 #~/kklepper/docker-wordpress$ nano docker
 
+# to get rid of MySQL warnings "Warning: Using a password on the command line interface can be insecure."
+
+echo
+echo "Create credentials"
+
+credentialsFile=~/.docker-wordpress-credentials.cnf
+echo "[client]" > $credentialsFile
+echo "user=root" >> $credentialsFile
+echo "password=root" >> $credentialsFile
+
+
 echo 
 echo "Create MySQL Tier"
 echo "-----------------"
@@ -21,48 +32,48 @@ sleep 2
 
 echo "* Creat replication user"
 
-mysql -uroot -proot -h $MYSQL01_IP -AN -e 'GRANT REPLICATION SLAVE ON *.* TO "replication"@"%" IDENTIFIED BY "password";'
-mysql -uroot -proot -h $MYSQL01_IP -AN -e 'flush privileges;'
+mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP -AN -e 'GRANT REPLICATION SLAVE ON *.* TO "replication"@"%" IDENTIFIED BY "password";'
+mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP -AN -e 'flush privileges;'
 
 echo "* Export Data from MySQL01 to MySQL02"
 
-mysqldump -uroot -proot -h $MYSQL01_IP --single-transaction --all-databases \
-	--flush-privileges | mysql -uroot -proot -h $MYSQL02_IP
+mysqldump --defaults-extra-file=$credentialsFile -h $MYSQL01_IP --single-transaction --all-databases \
+	--flush-privileges | mysql --defaults-extra-file=$credentialsFile -h $MYSQL02_IP
 
 echo "* Set MySQL01 as master on MySQL02"
 
-MYSQL01_Position=$(mysql -uroot -proot -h $MYSQL01_IP -e "show master status \G" | grep Position | awk '{print $2}')
-MYSQL01_File=$(mysql -uroot -proot -h $MYSQL01_IP -e "show master status \G"     | grep File     | awk '{print $2}')
+MYSQL01_Position=$(mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP -e "show master status \G" | grep Position | awk '{print $2}')
+MYSQL01_File=$(mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP -e "show master status \G"     | grep File     | awk '{print $2}')
 
-mysql -uroot -proot -h $MYSQL02_IP -AN -e "CHANGE MASTER TO master_host='$MYSQL01_IP', master_port=3306, \
+mysql --defaults-extra-file=$credentialsFile -h $MYSQL02_IP -AN -e "CHANGE MASTER TO master_host='$MYSQL01_IP', master_port=3306, \
 	master_user='replication', master_password='password', master_log_file='$MYSQL01_File', \
 	master_log_pos=$MYSQL01_Position;"
 
 echo "* Set MySQL02 as master on MySQL01"
 
-MYSQL02_Position=$(mysql -uroot -proot -h $MYSQL02_IP -e "show master status \G" | grep Position | awk '{print $2}')
-MYSQL02_File=$(mysql -uroot -proot -h $MYSQL02_IP -e "show master status \G"     | grep File     | awk '{print $2}')
+MYSQL02_Position=$(mysql --defaults-extra-file=$credentialsFile -h $MYSQL02_IP -e "show master status \G" | grep Position | awk '{print $2}')
+MYSQL02_File=$(mysql --defaults-extra-file=$credentialsFile -h $MYSQL02_IP -e "show master status \G"     | grep File     | awk '{print $2}')
 
-mysql -uroot -proot -h $MYSQL01_IP -AN -e "CHANGE MASTER TO master_host='$MYSQL02_IP', master_port=3306, \
+mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP -AN -e "CHANGE MASTER TO master_host='$MYSQL02_IP', master_port=3306, \
 	master_user='replication', master_password='password', master_log_file='$MYSQL02_File', \
 	master_log_pos=$MYSQL02_Position;"
 
 echo "* Start Slave on both Servers"
-mysql -uroot -proot -h $MYSQL01_IP -AN -e "start slave;"
-mysql -uroot -proot -h $MYSQL02_IP -AN -e "start slave;"
+mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP -AN -e "start slave;"
+mysql --defaults-extra-file=$credentialsFile -h $MYSQL02_IP -AN -e "start slave;"
 
 echo "* Create database 'wordpress' on MySQL01"
 
-mysql -uroot -proot -h $MYSQL01_IP -e "create database wordpress;"
+mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP -e "create database wordpress;"
 
 echo "* Load up Site SQL data"
 
-mysql -uroot -proot -h $MYSQL01_IP wordpress < wordpress.sql
+mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP wordpress < wordpress.sql
 
 echo "* Sleep 2 seconds, then check that database 'wordpress' exists on MySQL02"
 
 sleep 2
-mysql -uroot -proot -h $MYSQL02_IP -e "show databases; \G" | grep wordpress
+mysql --defaults-extra-file=$credentialsFile -h $MYSQL02_IP -e "show databases; \G" | grep wordpress
 
 echo 
 echo "Create MySQL Load Balancer"
@@ -70,7 +81,7 @@ echo "--------------------------"
 
 echo "* Create HAProxy-MySQL"
 
-mysql -uroot -proot -h $MYSQL01_IP -AN -e "GRANT USAGE ON *.* TO 'haproxy'@'%';"
+mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP -AN -e "GRANT USAGE ON *.* TO 'haproxy'@'%';"
 
 HAPROXY_MYSQL=$(docker run -d paulczar/haproxy-mysql /haproxy/start "$MYSQL01_IP:3306,$MYSQL02_IP:3306")
 HAPROXY_MYSQL_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}' $HAPROXY_MYSQL)
@@ -79,10 +90,10 @@ HAPROXY_MYSQL_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddr
 echo "* Check our haproxy works"
 echo "   (should show alternating server_id)"
 
-mysql -uroot -proot -h $HAPROXY_MYSQL_IP -e 'show variables like "server_id"' | grep server_id
-mysql -uroot -proot -h $HAPROXY_MYSQL_IP -e 'show variables like "server_id"' | grep server_id
-mysql -uroot -proot -h $HAPROXY_MYSQL_IP -e 'show variables like "server_id"' | grep server_id
-mysql -uroot -proot -h $HAPROXY_MYSQL_IP -e 'show variables like "server_id"' | grep server_id
+mysql --defaults-extra-file=$credentialsFile -h $HAPROXY_MYSQL_IP -e 'show variables like "server_id"' | grep server_id
+mysql --defaults-extra-file=$credentialsFile -h $HAPROXY_MYSQL_IP -e 'show variables like "server_id"' | grep server_id
+mysql --defaults-extra-file=$credentialsFile -h $HAPROXY_MYSQL_IP -e 'show variables like "server_id"' | grep server_id
+mysql --defaults-extra-file=$credentialsFile -h $HAPROXY_MYSQL_IP -e 'show variables like "server_id"' | grep server_id
 
 echo 
 echo "Create Wordpress Web Servers"
