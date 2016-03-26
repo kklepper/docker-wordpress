@@ -30,7 +30,7 @@ MYSQL02_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}
 echo "* Sleep for two seconds for servers to come online..."
 sleep 2
 
-echo "* Creat replication user"
+echo "* Create replication user"
 
 mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP -AN -e 'GRANT REPLICATION SLAVE ON *.* TO "replication"@"%" IDENTIFIED BY "password";'
 mysql --defaults-extra-file=$credentialsFile -h $MYSQL01_IP -AN -e 'flush privileges;'
