@@ -120,13 +120,13 @@ HAPROXY_WEB_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddres
 
 echo "* Check it works"
 
+echo "------------   (should show alternating container id)  ----------"
+curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}'
+curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}'
+curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}'
+curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}' 
 #curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "PHP API"
-curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME"
-curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME"
-curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME"
-curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME"
-
-echo "   (should show alternating container id)"
+echo "------------   (should show alternating container id)  ----------"
 
 echo "Environment Created!"
 echo "--------------------"
