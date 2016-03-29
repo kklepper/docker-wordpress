@@ -119,10 +119,10 @@ HAPROXY_WEB_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddres
 # new docker syntax
 
 echo "* Check it works ------------   (should show alternating container id)  ----------"
-curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}'
-curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}'
-curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}'
-curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}' 
+curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{printf "container ID: %s\n", $2}' 
+curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{printf "container ID: %s\n", $2}' 
+curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{printf "container ID: %s\n", $2}' 
+curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{printf "container ID: %s\n", $2}' 
 #curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "PHP API"
 
 echo "--------------------"
