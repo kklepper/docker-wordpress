@@ -118,16 +118,14 @@ HAPROXY_WEB=$(docker run -p 80:80 -d paulczar/haproxy-web /haproxy/start "$WORDP
 HAPROXY_WEB_IP=$(docker inspect -f '{{ .NetworkSettings.Networks.bridge.IPAddress }}' $HAPROXY_WEB)
 # new docker syntax
 
-echo "* Check it works"
-
-echo "------------   (should show alternating container id)  ----------"
+echo "* Check it works ------------   (should show alternating container id)  ----------"
 curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}'
 curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}'
 curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}'
 curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "HOSTNAME" | awk '{print $4}' | awk -F\> '{print $2}' 
 #curl -s http://$HAPROXY_WEB_IP/phpinfo.php | grep "PHP API"
-echo "------------   (should show alternating container id)  ----------"
 
+echo "--------------------"
 echo "Environment Created!"
 echo "--------------------"
 echo
